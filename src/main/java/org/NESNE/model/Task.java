@@ -4,33 +4,25 @@ import java.time.LocalDate;
 
 public class Task {
 
-    private int id;
-    private String title;
-    private String description;
-    private Priority priority;
+    private final int id;
+    private final String title;
+    private final String description;
+    private final Priority priority;
     private boolean completed;
-    private LocalDate createdDate;
-    private LocalDate deadline;
+    private final LocalDate createdDate;
+    private final LocalDate deadline;
 
-    // MEVCUT CONSTRUCTOR: Tam veri (UI'dan gelen) ile oluştururken kullanılır.
     public Task(int id, String title, String description,
                 Priority priority, LocalDate deadline) {
 
         this.id = id;
         this.title = title;
-        this.description = description;
+        this.description = (description != null) ? description : "";
         this.priority = priority;
-        this.deadline = deadline;
+        this.deadline = (deadline != null) ? deadline : LocalDate.now().plusDays(1);
+        
         this.createdDate = LocalDate.now();
         this.completed = false;
-    }
-
-    // YENİ EKLENEN CONSTRUCTOR: Dosyadan (List.txt) okurken kullanılır.
-    // Dosyada description ve deadline tutmadığın için onları varsayılan (default) değerlerle dolduruyoruz.
-    public Task(int id, String title, Priority priority) {
-        // Description için boş string, Deadline için "yarın" atadık.
-        // Hata vermemesi için geçici bir çözüm, ama en azından çalışır.
-        this(id, title, "", priority, LocalDate.now().plusDays(1));
     }
 
     public int getId() {

@@ -17,6 +17,5 @@ public interface TaskService {
     void deleteTask(int id) throws TaskNotFoundException;
 
     List<Task> getAllTasks();
-
-    void addTask(String text, Priority value);
 }
+

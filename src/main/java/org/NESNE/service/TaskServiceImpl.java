@@ -91,15 +91,6 @@ public class TaskServiceImpl implements TaskService {
         saveToFile();
     }
 
-    // --- İŞTE EKSİK OLAN VE HATAYA SEBEP OLAN METOT BURASI ---
-    @Override
-    public void addTask(String title, Priority priority) {
-        // Eksik bilgileri default değerlerle doldurup ana metoda paslıyoruz.
-        // Description: "" (boş), Deadline: Bugünün tarihi + 1 gün
-        addTask(title, "", priority, LocalDate.now().plusDays(1));
-    }
-    // ---------------------------------------------------------
-
     @Override
     public void completeTask(int id) throws TaskNotFoundException {
         Task task = findById(id);

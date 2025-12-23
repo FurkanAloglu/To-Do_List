@@ -9,17 +9,27 @@ import org.NESNE.model.Priority;
 import org.NESNE.model.Task;
 import org.NESNE.service.TaskService;
 
+import java.util.List;
+
 public class ToDoView {
 
     private final TaskService service;
+
+    // Tarih formatı (Sınıf seviyesinde tanımladık ki her yerde erişelim)
+    java.time.format.DateTimeFormatter dateFormatter =
+            java.time.format.DateTimeFormatter.ofPattern("dd MMMM yyyy");
 
     public ToDoView(TaskService service) {
         this.service = service;
     }
 
-    java.time.format.DateTimeFormatter dateFormatter = java.time.format.DateTimeFormatter.ofPattern("dd MMMM yyyy");
-
     public void start(Stage stage) {
+
+        // 1. ÖNCE BİLEŞENLERİ TANIMLIYORUZ (Sıra Önemli!)
+
+        // Arama Kutusu (En başa koyuyoruz)
+        TextField searchField = new TextField();
+        searchField.setPromptText("Görev Ara...");
 
         TextField titleField = new TextField();
 
@@ -41,10 +51,12 @@ public class ToDoView {
         Button doneBtn = new Button("Complete");
         Button deleteBtn = new Button("Delete");
 
+        // 2. LAYOUT (DÜZEN) AYARLARI
         HBox actions = new HBox(10, doneBtn, deleteBtn);
         actions.setPadding(new javafx.geometry.Insets(10));
 
         VBox inputForm = new VBox(8,
+                searchField, // Arama kutusunu en üste ekledik
                 new Label("Title"), titleField,
                 new Label("Description"), descriptionArea,
                 new Label("Priority"), priorityBox,
@@ -58,8 +70,9 @@ public class ToDoView {
         root.setCenter(listView);
         root.setBottom(actions);
 
-        Scene scene = new Scene(root, 800, 500);
-        
+        Scene scene = new Scene(root, 900, 600); // Biraz genişlettim
+
+        // CSS Yükleme
         try {
             if (getClass().getResource("/style.css") != null) {
                 scene.getStylesheets().add(
@@ -74,6 +87,9 @@ public class ToDoView {
         stage.setScene(scene);
         stage.show();
 
+        // 3. OLAYLAR (ACTIONS)
+
+        // Ekleme Butonu
         addBtn.setOnAction(e -> {
             service.addTask(
                     titleField.getText(),
@@ -82,62 +98,69 @@ public class ToDoView {
                     deadlinePicker.getValue()
             );
 
+            // Temizlik
             titleField.clear();
             descriptionArea.clear();
             deadlinePicker.setValue(null);
-            refresh(listView);
+
+            // Listeyi yenile (Arama metnine göre)
+            refresh(listView, searchField.getText());
         });
 
-
+        // Tamamlama Butonu
         doneBtn.setOnAction(e -> {
             Task task = listView.getSelectionModel().getSelectedItem();
-
             if (task == null) {
                 showAlert("Please select a task.");
                 return;
             }
-
             try {
                 service.completeTask(task.getId());
-                refresh(listView);
+                refresh(listView, searchField.getText());
             } catch (Exception ex) {
                 showAlert(ex.getMessage());
             }
         });
 
-
+        // Silme Butonu
         deleteBtn.setOnAction(e -> {
             Task task = listView.getSelectionModel().getSelectedItem();
-
             if (task == null) {
                 showAlert("Please select a task.");
                 return;
             }
-
             try {
                 service.deleteTask(task.getId());
-                refresh(listView);
+                refresh(listView, searchField.getText());
             } catch (Exception ex) {
                 showAlert(ex.getMessage());
             }
         });
 
+        // --- LİSTENERLER (DİNLEYİCİLER) ---
+
+        // Arama Yapıldıkça Çalışan Listener
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            refresh(listView, newVal);
+        });
+
+        // Listeden Seçim Yapılınca Çalışan Listener (Detayları Doldurur)
         listView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
-                // Seçilen görevin bilgilerini sol taraftaki kutucuklara doldur
                 titleField.setText(newSelection.getTitle());
-                descriptionArea.setText(newSelection.getDescription()); // İşte aradığın description burada görünecek!
+                descriptionArea.setText(newSelection.getDescription());
                 priorityBox.setValue(newSelection.getPriority());
                 deadlinePicker.setValue(newSelection.getDeadline());
             }
         });
+
+        // --- GÖRÜNÜM AYARLARI (CELL FACTORY) ---
 
         listView.setCellFactory(lv -> new ListCell<>() {
             @Override
             protected void updateItem(Task task, boolean empty) {
                 super.updateItem(task, empty);
 
-                // Önceki stil sınıflarını temizle (bunu yapmazsan liste kayarken renkler karışır)
                 getStyleClass().removeAll(
                         "done", "todo",
                         "priority-HIGH", "priority-MEDIUM", "priority-LOW"
@@ -146,25 +169,16 @@ public class ToDoView {
                 if (empty || task == null) {
                     setText(null);
                     setGraphic(null);
-
-                    // ÇÖZÜM 1: Boş satırların seçilmesini ve üzerine gelince parlamasını engeller.
-                    // Fare olaylarını bu hücre için tamamen kapatırız (hayalet mod).
-                    setMouseTransparent(true);
-
-                    // Stili sıfırla ki önceki satırdan kalan renkler görünmesin
+                    setMouseTransparent(true); // Boş satıra tıklanamasın
                     setStyle("-fx-background-color: transparent;");
-
                 } else {
-                    // Dolu satır olduğu için tıklamaya tekrar izin ver
                     setMouseTransparent(false);
 
-                    // ÇÖZÜM 2: Tarihi okunabilir hale getiriyoruz.
-                    // Model'deki (Task.java) toString'i kullanmak yerine burada özel format yapıyoruz.
+                    // Tarihi güzel formatta yaz
                     String formattedDate = (task.getDeadline() != null)
                             ? task.getDeadline().format(dateFormatter)
                             : "Tarih Yok";
 
-                    // Ekranda görünecek metni, Task.toString()'den daha şık hale getirelim
                     String displayText = String.format("%s  |  %s  |  %s",
                             task.getTitle(),
                             task.getPriority(),
@@ -173,18 +187,31 @@ public class ToDoView {
 
                     setText(displayText);
 
-                    // CSS sınıflarını ekle
                     getStyleClass().add(task.isCompleted() ? "done" : "todo");
                     getStyleClass().add("priority-" + task.getPriority().name());
                 }
             }
         });
 
-        refresh(listView);
+        // Uygulama ilk açıldığında listeyi doldur
+        refresh(listView, "");
     }
 
-    private void refresh(ListView<Task> listView) {
-        listView.getItems().setAll(service.getAllTasks());
+    // --- YARDIMCI METOTLAR ---
+
+    // Arama destekli yenileme metodu
+    private void refresh(ListView<Task> listView, String searchText) {
+        List<Task> allTasks = service.getAllTasks();
+
+        if (searchText == null || searchText.isEmpty()) {
+            listView.getItems().setAll(allTasks);
+        } else {
+            // Arama filtresi (Büyük/küçük harf duyarsız)
+            var filtered = allTasks.stream()
+                    .filter(t -> t.getTitle().toLowerCase().contains(searchText.toLowerCase()))
+                    .toList();
+            listView.getItems().setAll(filtered);
+        }
     }
 
     private void showAlert(String msg) {

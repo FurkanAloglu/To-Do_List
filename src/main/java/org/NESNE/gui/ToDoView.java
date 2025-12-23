@@ -15,9 +15,7 @@ public class ToDoView {
 
     private final TaskService service;
 
-    // Tarih formatı (Sınıf seviyesinde tanımladık ki her yerde erişelim)
-    java.time.format.DateTimeFormatter dateFormatter =
-            java.time.format.DateTimeFormatter.ofPattern("dd MMMM yyyy");
+    java.time.format.DateTimeFormatter dateFormatter = java.time.format.DateTimeFormatter.ofPattern("dd MMMM yyyy");
 
     public ToDoView(TaskService service) {
         this.service = service;
@@ -25,9 +23,6 @@ public class ToDoView {
 
     public void start(Stage stage) {
 
-        // 1. ÖNCE BİLEŞENLERİ TANIMLIYORUZ (Sıra Önemli!)
-
-        // Arama Kutusu (En başa koyuyoruz)
         TextField searchField = new TextField();
         searchField.setPromptText("Görev Ara...");
 
@@ -40,8 +35,7 @@ public class ToDoView {
         DatePicker deadlinePicker = new DatePicker();
         deadlinePicker.setPromptText("Deadline");
 
-        ComboBox<Priority> priorityBox =
-                new ComboBox<>(FXCollections.observableArrayList(Priority.values()));
+        ComboBox<Priority> priorityBox = new ComboBox<>(FXCollections.observableArrayList(Priority.values()));
         priorityBox.setValue(Priority.MEDIUM);
 
         Button addBtn = new Button("Add Task");
@@ -51,57 +45,42 @@ public class ToDoView {
         Button doneBtn = new Button("Complete");
         Button deleteBtn = new Button("Delete");
 
-        // 2. LAYOUT (DÜZEN) AYARLARI
         HBox actions = new HBox(10, doneBtn, deleteBtn);
         actions.setPadding(new javafx.geometry.Insets(10));
 
-        // ... (Üstteki tanımlamalar aynı kalsın) ...
-
-        // --- YENİ EKLENEN KISIM BAŞLANGICI ---
 
         Button clearBtn = new Button("Clear");
-        // Biraz farklı görünsün diye stil verebiliriz (Opsiyonel)
         clearBtn.setStyle("-fx-background-color: #555; -fx-text-fill: white;");
 
         clearBtn.setOnAction(e -> {
-            // 1. Yazı alanlarını temizle
             titleField.clear();
             descriptionArea.clear();
 
-            // 2. Seçim kutularını sıfırla
             deadlinePicker.setValue(null);
             priorityBox.setValue(Priority.MEDIUM);
 
-            // 3. Listeden seçimi kaldır (Önemli! Yoksa hala o görevi düzenliyor sanırsın)
             listView.getSelectionModel().clearSelection();
         });
 
-        // Ekle ve Temizle butonlarını yan yana koyalım
         HBox inputButtonBox = new HBox(10, addBtn, clearBtn);
 
-        // --- YENİ EKLENEN KISIM BİTİŞİ ---
-
-        // VBox inputForm kısmını güncelle:
         VBox inputForm = new VBox(8,
                 searchField,
                 new Label("Title"), titleField,
                 new Label("Description"), descriptionArea,
                 new Label("Priority"), priorityBox,
                 new Label("Deadline"), deadlinePicker,
-                inputButtonBox // <-- ARTIK SADECE addBtn DEĞİL, İKİSİ BİRDEN VAR
+                inputButtonBox
         );
         inputForm.setPadding(new javafx.geometry.Insets(10));
-
-        // ... (Geri kalan kodlar aynı) ...
 
         BorderPane root = new BorderPane();
         root.setLeft(inputForm);
         root.setCenter(listView);
         root.setBottom(actions);
 
-        Scene scene = new Scene(root, 900, 600); // Biraz genişlettim
+        Scene scene = new Scene(root, 900, 600);
 
-        // CSS Yükleme
         try {
             if (getClass().getResource("/style.css") != null) {
                 scene.getStylesheets().add(
@@ -116,9 +95,7 @@ public class ToDoView {
         stage.setScene(scene);
         stage.show();
 
-        // 3. OLAYLAR (ACTIONS)
 
-        // Ekleme Butonu
         addBtn.setOnAction(e -> {
             service.addTask(
                     titleField.getText(),
@@ -127,16 +104,13 @@ public class ToDoView {
                     deadlinePicker.getValue()
             );
 
-            // Temizlik
             titleField.clear();
             descriptionArea.clear();
             deadlinePicker.setValue(null);
 
-            // Listeyi yenile (Arama metnine göre)
             refresh(listView, searchField.getText());
         });
 
-        // Tamamlama Butonu
         doneBtn.setOnAction(e -> {
             Task task = listView.getSelectionModel().getSelectedItem();
             if (task == null) {
@@ -151,7 +125,6 @@ public class ToDoView {
             }
         });
 
-        // Silme Butonu
         deleteBtn.setOnAction(e -> {
             Task task = listView.getSelectionModel().getSelectedItem();
             if (task == null) {
@@ -166,14 +139,10 @@ public class ToDoView {
             }
         });
 
-        // --- LİSTENERLER (DİNLEYİCİLER) ---
-
-        // Arama Yapıldıkça Çalışan Listener
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             refresh(listView, newVal);
         });
 
-        // Listeden Seçim Yapılınca Çalışan Listener (Detayları Doldurur)
         listView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
                 titleField.setText(newSelection.getTitle());
@@ -183,14 +152,12 @@ public class ToDoView {
             }
         });
 
-        // --- GÖRÜNÜM AYARLARI (CELL FACTORY) ---
 
         listView.setCellFactory(lv -> new ListCell<>() {
             @Override
             protected void updateItem(Task task, boolean empty) {
                 super.updateItem(task, empty);
 
-                // Temizlik
                 getStyleClass().removeAll("done", "todo", "priority-HIGH", "priority-MEDIUM", "priority-LOW");
 
                 if (empty || task == null) {
@@ -201,15 +168,12 @@ public class ToDoView {
                 } else {
                     setMouseTransparent(false);
 
-                    // Tarih Formatı
                     String formattedDate = (task.getDeadline() != null)
                             ? task.getDeadline().format(dateFormatter)
                             : "Tarih Yok";
 
-                    // GÖRSEL DÜZELTME: Tamamlandıysa başına [BİTTİ] veya ✓ koyuyoruz
                     String statusPrefix = task.isCompleted() ? "✓ " : "";
 
-                    // Tamamlandıysa yazıyı daha farklı gösterelim
                     String displayText = String.format("%s%s  |  %s  |  %s",
                             statusPrefix,
                             task.getTitle(),
@@ -219,11 +183,9 @@ public class ToDoView {
 
                     setText(displayText);
 
-                    // CSS Sınıflarını Ekle
                     getStyleClass().add(task.isCompleted() ? "done" : "todo");
                     getStyleClass().add("priority-" + task.getPriority().name());
 
-                    // EKSTRA GARANTİ: CSS çalışmasa bile kodla renk değiştir (Sarı/Gri)
                     if (task.isCompleted()) {
                         setStyle("-fx-text-fill: #555555; -fx-font-style: italic;"); // Sönük ve İtalik
                     } else {
@@ -233,20 +195,15 @@ public class ToDoView {
             }
         });
 
-        // Uygulama ilk açıldığında listeyi doldur
         refresh(listView, "");
     }
 
-    // --- YARDIMCI METOTLAR ---
-
-    // Arama destekli yenileme metodu
     private void refresh(ListView<Task> listView, String searchText) {
         List<Task> allTasks = service.getAllTasks();
 
         if (searchText == null || searchText.isEmpty()) {
             listView.getItems().setAll(allTasks);
         } else {
-            // Arama filtresi (Büyük/küçük harf duyarsız)
             var filtered = allTasks.stream()
                     .filter(t -> t.getTitle().toLowerCase().contains(searchText.toLowerCase()))
                     .toList();

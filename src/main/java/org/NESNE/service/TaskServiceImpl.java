@@ -11,9 +11,8 @@ import java.util.List;
 
 public class TaskServiceImpl implements TaskService {
 
-    // Değişkenleri sınıfın başına aldım, okunabilirlik için standart budur.
     private final String FILE_PATH = "src/main/resources/List.txt";
-    private List<Task> tasks = new ArrayList<>();
+    private final List<Task> tasks = new ArrayList<>();
     private int counter = 1;
 
     public TaskServiceImpl() {
@@ -39,10 +38,8 @@ public class TaskServiceImpl implements TaskService {
             while ((line = br.readLine()) != null) {
                 if (line.trim().isEmpty()) continue;
 
-                // Formatımız artık şu: ID | Title | Description | Priority | Deadline | Status
                 String[] parts = line.split(" \\| ");
 
-                // En az 6 parça olmalı (Eksikse o satırı atla)
                 if (parts.length < 6) {
                     continue;
                 }
@@ -50,19 +47,11 @@ public class TaskServiceImpl implements TaskService {
                 try {
                     int id = Integer.parseInt(parts[0].trim());
                     String title = parts[1].trim();
-
-                    // Yeni eklenen kısımlar:
-                    // Açıklamada satır atlama varsa diye replace yapmıştık, burada geri döndürmeye gerek yok, düz okuyoruz.
                     String description = parts[2].trim();
-
                     Priority priority = Priority.valueOf(parts[3].trim());
-
-                    // Tarihi String'den LocalDate'e çeviriyoruz
                     LocalDate deadline = LocalDate.parse(parts[4].trim());
-
                     boolean completed = parts[5].trim().equals("DONE");
 
-                    // Artık TAM constructor'ı kullanabiliriz (Task.java'daki en geniş constructor)
                     Task task = new Task(id, title, description, priority, deadline);
 
                     if (completed) {
@@ -88,6 +77,7 @@ public class TaskServiceImpl implements TaskService {
 
         Task task = new Task(counter++, title, description, priority, deadline);
         tasks.add(task);
+        
         saveToFile();
     }
 
@@ -121,18 +111,16 @@ public class TaskServiceImpl implements TaskService {
     private void saveToFile() {
         try (PrintWriter pw = new PrintWriter(new FileWriter(FILE_PATH))) {
             for (Task t : tasks) {
-                // Description içindeki enter tuşlarını (yeni satır) ve ayıraç (|) karakterini temizlemeliyiz
-                // Yoksa dosya formatı bozulur!
                 String safeDescription = t.getDescription()
-                        .replace("\n", " ")  // Enter'ı boşluğa çevir
-                        .replace("|", "-"); // Ayıracı tireye çevir
+                        .replace("\n", " ")
+                        .replace("|", "-");
 
                 pw.println(
                         t.getId() + " | " +
                                 t.getTitle() + " | " +
-                                safeDescription + " | " + // Artık kaydediliyor
+                                safeDescription + " | " +
                                 t.getPriority() + " | " +
-                                t.getDeadline() + " | " + // Artık kaydediliyor
+                                t.getDeadline() + " | " +
                                 (t.isCompleted() ? "DONE" : "TODO")
                 );
             }

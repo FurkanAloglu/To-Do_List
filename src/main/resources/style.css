@@ -1,0 +1,78 @@
+.root {
+    -fx-font-family: "Segoe UI", "Inter", sans-serif;
+    -fx-background-color: #121212;
+    -fx-padding: 15;
+}
+
+/* LABELS */
+.label {
+    -fx-text-fill: #e0e0e0;
+    -fx-font-size: 13px;
+}
+
+/* INPUTS */
+.text-field, .combo-box {
+    -fx-background-color: #1e1e1e;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #333;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+/* BUTTONS */
+.button {
+    -fx-background-color: #2979ff;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+}
+
+.button:hover {
+    -fx-background-color: #5393ff;
+}
+
+/* LIST */
+.list-view {
+    -fx-background-color: #1a1a1a;
+    -fx-border-color: #333;
+    -fx-border-radius: 8;
+}
+
+/* LIST CELLS */
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e0e0e0;
+    -fx-padding: 8 12;
+}
+
+.list-cell:selected {
+    -fx-background-color: #2979ff;
+    -fx-text-fill: white;
+}
+
+.list-cell:hover {
+    -fx-background-color: #2a2a2a;
+}
+
+/* TASK STATES */
+.done {
+    -fx-text-fill: #777777;
+    -fx-strikethrough: true;
+}
+
+.todo {
+    -fx-text-fill: #ffffff;
+}
+
+/* PRIORITY COLORS */
+.priority-HIGH {
+    -fx-text-fill: #ff5252;
+}
+
+.priority-MEDIUM {
+    -fx-text-fill: #ffca28;
+}
+
+.priority-LOW {
+    -fx-text-fill: #69f0ae;
+}

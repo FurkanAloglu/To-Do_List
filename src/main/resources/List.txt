@@ -1,0 +1,4 @@
+1 | asdasdassa | MEDIUM | DONE
+2 | sadıjndasnjds | HIGH | DONE
+3 | asddasasd | HIGH | TODO
+5 | 1234eds | LOW | TODO

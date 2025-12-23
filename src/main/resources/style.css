@@ -76,3 +76,60 @@
 .priority-LOW {
     -fx-text-fill: #69f0ae;
 }
+
+/* --- DATE PICKER DÜZELTMELERİ --- */
+
+/* Takvimin ana arka planı */
+.date-picker-popup {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: #333;
+}
+
+/* Ay ve Yılın yazdığı üst kısım */
+.date-picker-popup .month-year-pane {
+    -fx-background-color: #2a2a2a;
+}
+
+/* Ay ve Yıl yazısının rengi (Görünmeyen kısım burasıydı) */
+.date-picker-popup .month-year-pane .label {
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+}
+
+/* Günlerin (1, 2, 3...) kutucukları */
+.date-picker-popup .day-cell {
+    -fx-background-color: #1e1e1e;
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: transparent;
+}
+
+/* Günlerin üzerine gelince */
+.date-picker-popup .day-cell:hover {
+    -fx-background-color: #333333;
+    -fx-border-color: #555;
+}
+
+/* Seçili olan gün */
+.date-picker-popup .day-cell:selected {
+    -fx-background-color: #2979ff;
+    -fx-text-fill: white;
+}
+
+/* Bugünün tarihi (Genelde mavi çerçeve olur) */
+.date-picker-popup .today {
+    -fx-background-color: #1e1e1e;
+    -fx-text-fill: #2979ff;
+    -fx-border-color: #2979ff;
+}
+
+/* Haftanın günleri (Pzt, Sal, Çar...) */
+.date-picker-popup .day-name-cell {
+    -fx-background-color: #2a2a2a;
+    -fx-text-fill: #999;
+}
+
+/* Ay değiştirmek için sağ-sol okları */
+.date-picker-popup .spinner .button .left-arrow,
+.date-picker-popup .spinner .button .right-arrow {
+    -fx-background-color: #e0e0e0;
+}

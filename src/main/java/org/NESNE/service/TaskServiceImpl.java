@@ -11,43 +11,76 @@ import java.util.List;
 
 public class TaskServiceImpl implements TaskService {
 
+    // Değişkenleri sınıfın başına aldım, okunabilirlik için standart budur.
+    private final String FILE_PATH = "src/main/resources/List.txt";
+    private List<Task> tasks = new ArrayList<>();
+    private int counter = 1;
+
+    public TaskServiceImpl() {
+        loadFromFile();
+    }
+
     private void loadFromFile() {
         File file = new File(FILE_PATH);
 
-        if (!file.exists()) return;
+        if (!file.exists()) {
+            try {
+                file.getParentFile().mkdirs();
+                file.createNewFile();
+            } catch (IOException e) {
+                System.err.println("Dosya oluşturulamadı: " + e.getMessage());
+            }
+            return;
+        }
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
 
             while ((line = br.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+
+                // Formatımız artık şu: ID | Title | Description | Priority | Deadline | Status
                 String[] parts = line.split(" \\| ");
 
-                int id = Integer.parseInt(parts[0]);
-                String title = parts[1];
-                Priority priority = Priority.valueOf(parts[2]);
-                boolean completed = parts[3].equals("DONE");
-
-                Task task = new Task(id, title, priority);
-                if (completed) {
-                    task.markCompleted();
+                // En az 6 parça olmalı (Eksikse o satırı atla)
+                if (parts.length < 6) {
+                    continue;
                 }
 
-                tasks.add(task);
-                counter = Math.max(counter, id + 1);
+                try {
+                    int id = Integer.parseInt(parts[0].trim());
+                    String title = parts[1].trim();
+
+                    // Yeni eklenen kısımlar:
+                    // Açıklamada satır atlama varsa diye replace yapmıştık, burada geri döndürmeye gerek yok, düz okuyoruz.
+                    String description = parts[2].trim();
+
+                    Priority priority = Priority.valueOf(parts[3].trim());
+
+                    // Tarihi String'den LocalDate'e çeviriyoruz
+                    LocalDate deadline = LocalDate.parse(parts[4].trim());
+
+                    boolean completed = parts[5].trim().equals("DONE");
+
+                    // Artık TAM constructor'ı kullanabiliriz (Task.java'daki en geniş constructor)
+                    Task task = new Task(id, title, description, priority, deadline);
+
+                    if (completed) {
+                        task.markCompleted();
+                    }
+
+                    tasks.add(task);
+                    counter = Math.max(counter, id + 1);
+
+                } catch (Exception e) {
+                    System.err.println("Satır okunurken hata: " + line + " -> " + e.getMessage());
+                }
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-    public TaskServiceImpl() {
-        loadFromFile();
-    }
-
-    private List<Task> tasks = new ArrayList<>();
-    private int counter = 1;
-    private final String FILE_PATH = "src/main/resources/List.txt";
 
     @Override
     public void addTask(String title, String description,
@@ -58,6 +91,14 @@ public class TaskServiceImpl implements TaskService {
         saveToFile();
     }
 
+    // --- İŞTE EKSİK OLAN VE HATAYA SEBEP OLAN METOT BURASI ---
+    @Override
+    public void addTask(String title, Priority priority) {
+        // Eksik bilgileri default değerlerle doldurup ana metoda paslıyoruz.
+        // Description: "" (boş), Deadline: Bugünün tarihi + 1 gün
+        addTask(title, "", priority, LocalDate.now().plusDays(1));
+    }
+    // ---------------------------------------------------------
 
     @Override
     public void completeTask(int id) throws TaskNotFoundException {
@@ -89,15 +130,20 @@ public class TaskServiceImpl implements TaskService {
     private void saveToFile() {
         try (PrintWriter pw = new PrintWriter(new FileWriter(FILE_PATH))) {
             for (Task t : tasks) {
+                // Description içindeki enter tuşlarını (yeni satır) ve ayıraç (|) karakterini temizlemeliyiz
+                // Yoksa dosya formatı bozulur!
+                String safeDescription = t.getDescription()
+                        .replace("\n", " ")  // Enter'ı boşluğa çevir
+                        .replace("|", "-"); // Ayıracı tireye çevir
+
                 pw.println(
                         t.getId() + " | " +
                                 t.getTitle() + " | " +
-                                t.getDescription() + " | " +
+                                safeDescription + " | " + // Artık kaydediliyor
                                 t.getPriority() + " | " +
-                                t.getDeadline() + " | " +
+                                t.getDeadline() + " | " + // Artık kaydediliyor
                                 (t.isCompleted() ? "DONE" : "TODO")
                 );
-
             }
         } catch (IOException e) {
             e.printStackTrace();

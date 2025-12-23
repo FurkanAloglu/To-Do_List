@@ -17,6 +17,8 @@ public class ToDoView {
         this.service = service;
     }
 
+    java.time.format.DateTimeFormatter dateFormatter = java.time.format.DateTimeFormatter.ofPattern("dd MMMM yyyy");
+
     public void start(Stage stage) {
 
         TextField titleField = new TextField();
@@ -120,12 +122,22 @@ public class ToDoView {
             }
         });
 
+        listView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection != null) {
+                // Seçilen görevin bilgilerini sol taraftaki kutucuklara doldur
+                titleField.setText(newSelection.getTitle());
+                descriptionArea.setText(newSelection.getDescription()); // İşte aradığın description burada görünecek!
+                priorityBox.setValue(newSelection.getPriority());
+                deadlinePicker.setValue(newSelection.getDeadline());
+            }
+        });
 
         listView.setCellFactory(lv -> new ListCell<>() {
             @Override
             protected void updateItem(Task task, boolean empty) {
                 super.updateItem(task, empty);
 
+                // Önceki stil sınıflarını temizle (bunu yapmazsan liste kayarken renkler karışır)
                 getStyleClass().removeAll(
                         "done", "todo",
                         "priority-HIGH", "priority-MEDIUM", "priority-LOW"
@@ -133,9 +145,35 @@ public class ToDoView {
 
                 if (empty || task == null) {
                     setText(null);
-                } else {
-                    setText(task.toString());
+                    setGraphic(null);
 
+                    // ÇÖZÜM 1: Boş satırların seçilmesini ve üzerine gelince parlamasını engeller.
+                    // Fare olaylarını bu hücre için tamamen kapatırız (hayalet mod).
+                    setMouseTransparent(true);
+
+                    // Stili sıfırla ki önceki satırdan kalan renkler görünmesin
+                    setStyle("-fx-background-color: transparent;");
+
+                } else {
+                    // Dolu satır olduğu için tıklamaya tekrar izin ver
+                    setMouseTransparent(false);
+
+                    // ÇÖZÜM 2: Tarihi okunabilir hale getiriyoruz.
+                    // Model'deki (Task.java) toString'i kullanmak yerine burada özel format yapıyoruz.
+                    String formattedDate = (task.getDeadline() != null)
+                            ? task.getDeadline().format(dateFormatter)
+                            : "Tarih Yok";
+
+                    // Ekranda görünecek metni, Task.toString()'den daha şık hale getirelim
+                    String displayText = String.format("%s  |  %s  |  %s",
+                            task.getTitle(),
+                            task.getPriority(),
+                            formattedDate
+                    );
+
+                    setText(displayText);
+
+                    // CSS sınıflarını ekle
                     getStyleClass().add(task.isCompleted() ? "done" : "todo");
                     getStyleClass().add("priority-" + task.getPriority().name());
                 }

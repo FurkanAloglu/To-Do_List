@@ -1,4 +1,2 @@
-1 | asdasdassa | MEDIUM | DONE
-2 | sadıjndasnjds | HIGH | DONE
-3 | asddasasd | HIGH | TODO
-5 | 1234eds | LOW | TODO
+2 | 312412132 | 12313123123123123 | MEDIUM | 2026-01-03 | TODO
+3 | 312412132 | 12313123123123123sadas | MEDIUM | 2026-01-03 | TODO
